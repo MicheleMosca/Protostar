@@ -49,3 +49,56 @@ you have changed the 'modified' variable
 ```
 
 We know that the **modified** variable have 1 as value.
+
+## Mitigation #1
+
+We can use the function **fgets()** to set a limit to the number of char that will be read:
+
+```c
+fgets(buffer, 64, stdin);
+```
+
+The code will be:
+
+```c
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+  volatile int modified;
+  char buffer[64];
+
+  modified = 0;
+  fgets(buffer, 64, stdin);
+
+  if(modified != 0) {
+      printf("you have changed the 'modified' variable\n");
+  } else {
+      printf("Try again?\n");
+  }
+}
+```
+
+Save the code as **stack0-fgets.c** and compile it:
+
+```bash
+gcc -fno-stack-protector -z execstack -o /opt/protostar/bin/stack0-fgets /opt/protostar/bin/stack0-fgets.c
+```
+
+This options turn off all protection agaist buffer overflow.
+
+Set correct privileges:
+
+```bash
+chown root:root /opt/protostar/bin/stack0-fgets
+chmod 4755 /opt/protostar/bin/stack0-fgets
+```
+
+If we try again the exploit, we will get:
+
+```bash
+$ python -c "print('A' * 64 + '\x01')" | /opt/protostar/bin/stack0-fgets
+Try again?
+```
