@@ -258,7 +258,7 @@ id
 uid=1001(user) gid=1001(user) euid=0(root) groups=0(root),1001(user)
 ```
 
-## Writeup
+## Exploit
 
 ```python
 #!/usr/bin/python3
